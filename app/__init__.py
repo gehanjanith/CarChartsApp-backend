@@ -12,7 +12,8 @@ from .routes_plot import plot_blueprint
 from .routes_privateMessages import savePrivateMessage_blueprint, getPrivateMessages_blueprint, \
     getUserPrivateMessages_blueprint, getPrivateMessagesPerAdvertisement_blueprint, \
     getAdvertisementPrivateMessagesPerUser_blueprint
-from .routes_salePost import post_blueprint, getAllPosts_blueprint, getAllPostsPerUser_blueprint
+from .routes_salePost import post_blueprint, getAllPosts_blueprint, getAllPostsPerUser_blueprint, deletePost_blueprint, \
+    acceptOfferPost_blueprint
 from .routes_search import search_blueprint
 from .routes_sheduledJob import sheduledJob_blueprint
 from .routes_users import addUser_blueprint, searchUser_blueprint, updateUser_blueprint, deleteUser_blueprint
@@ -33,6 +34,8 @@ def car_charts_app():
     app.register_blueprint(post_blueprint)
     app.register_blueprint(getAllPosts_blueprint)
     app.register_blueprint(getAllPostsPerUser_blueprint)
+    app.register_blueprint(deletePost_blueprint)
+    app.register_blueprint(acceptOfferPost_blueprint)
 
     app.register_blueprint(addUser_blueprint)
     app.register_blueprint(searchUser_blueprint)

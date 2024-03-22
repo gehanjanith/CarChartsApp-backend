@@ -5,6 +5,8 @@ import mysql.connector
 post_blueprint = Blueprint('post', __name__)
 getAllPosts_blueprint = Blueprint('get-all-posts', __name__)
 getAllPostsPerUser_blueprint = Blueprint('get-all-posts-per-user', __name__)
+deletePost_blueprint = Blueprint('delete-post', __name__)
+acceptOfferPost_blueprint = Blueprint('accept-offer-post', __name__)
 
 
 @post_blueprint.route('/post', methods=['POST'])
@@ -60,14 +62,33 @@ def save_data():
             cursor.close()
             db_connection.close()
 
-
 @getAllPosts_blueprint.route('/get-all-posts', methods=['GET'])
 def get_all_data():
     try:
         conn = mysql.connector.connect(**db_config)
         cursor = conn.cursor(dictionary=True)  # Use dictionary cursor for JSON output
 
-        cursor.execute("SELECT * FROM local_advertisements")
+        cursor.execute("SELECT * FROM `local_advertisements` WHERE isAccepted != 1")
+        data = cursor.fetchall()
+
+        return jsonify(data)
+
+    except Exception as e:
+        print(f"Database error: {e}")
+        return jsonify({'error': 'Database error'})
+
+    finally:
+        cursor.close()
+        conn.close()
+
+@getAllPostsPerUser_blueprint.route('/get-all-posts-per-user/<string:user>', methods=['GET'])
+def get_all_data_per_user(user):
+    try:
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor(dictionary=True)  # Use dictionary cursor for JSON output
+
+        query = "SELECT * FROM local_advertisements WHERE user = %s"
+        cursor.execute(query, (user,))
         data = cursor.fetchall()
 
         return jsonify(data)
@@ -81,17 +102,45 @@ def get_all_data():
         conn.close()
 
 
-@getAllPostsPerUser_blueprint.route('/get-all-posts-per-user/<string:user>', methods=['GET'])
-def get_all_data_per_user(user):
+@deletePost_blueprint.route('/delete-post/<int:post_id>', methods=['DELETE'])
+def delete_post(post_id):
     try:
         conn = mysql.connector.connect(**db_config)
-        cursor = conn.cursor(dictionary=True)  # Use dictionary cursor for JSON output
+        cursor = conn.cursor()
 
-        query = "SELECT * FROM local_advertisements WHERE user = %s"
-        cursor.execute(query, (user,))
-        data = cursor.fetchall()
+        sql_query = "DELETE FROM local_advertisements WHERE id = %s"
+        cursor.execute(sql_query, (post_id,))
+        conn.commit()
 
-        return jsonify(data)
+        if cursor.rowcount > 0:
+            return jsonify({'message': 'Post successfully deleted'}), 200
+        else:
+            return jsonify({'message': 'Post with specified ID not found'}), 404
+
+    except mysql.connector.Error as err:
+        return jsonify({'error': f'Database error: {err}'}), 500
+
+    finally:
+        cursor.close()
+        conn.close()
+
+
+@acceptOfferPost_blueprint.route('/accept-offer-post/<int:post_id>', methods=['PUT'])
+def acceptOffer_post(post_id):
+    try:
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor()
+
+        # Update the isAccepted field to 1 for the given post_id
+        sql_query = "UPDATE local_advertisements SET isAccepted = 1 WHERE id = %s"
+        cursor.execute(sql_query, (post_id,))
+        conn.commit()
+
+        # Check if any rows were affected
+        if cursor.rowcount > 0:
+            return jsonify({'message': 'Post accepted successfully'})
+        else:
+            return jsonify({'message': 'Post with specified ID not found'})
 
     except Exception as e:
         print(f"Database error: {e}")
