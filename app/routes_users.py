@@ -125,7 +125,7 @@ def delete_user(user_id):
     # Define the SQL query
     sql_query = """
     DELETE FROM users
-    WHERE user_id = %s
+    WHERE id = %s
     """
 
     try:
